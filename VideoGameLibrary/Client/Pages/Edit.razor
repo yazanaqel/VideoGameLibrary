@@ -1,0 +1,91 @@
+﻿@page "/edit"
+@page "/edit/{id:int}"
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+
+@if (Id is null)
+{
+	<PageTitle>Create a New Video Game</PageTitle>
+	<h3>Create a New Video Game</h3>
+}
+else
+{
+	<PageTitle>Edit @videoGame.Title</PageTitle>
+	<h3>Edit @videoGame.Title</h3>
+}
+
+<EditForm Model="videoGame" OnSubmit="HandleSubmit">
+	<DataAnnotationsValidator />
+
+	<div class="form-group">
+		<label for="title">Title</label>
+		<InputText id="title" @bind-Value="videoGame.Title" class="form-control" />
+	</div>
+
+	<div class="form-group">
+		<label for="author">Author</label>
+		<InputText id="author" @bind-Value="videoGame.Author" class="form-control" />
+	</div>
+
+	<div class="form-group">
+		<label for="releaseYear">Release Year</label>
+		<InputNumber id="releaseYear" @bind-Value="videoGame.ReleaseYear" class="form-control" />
+	</div>
+
+	<button type="submit" class="btn btn-primary">Save</button> | 
+	@if (Id is not null)
+	{
+		 <button class="btn btn-danger" @onclick="DeleteVideoGame">Delete</button>
+	}
+	<ValidationSummary />
+</EditForm>
+
+@code {
+
+	[Parameter]
+	public int? Id { get; set; }
+	VideoGame videoGame = new VideoGame { Title = "New Game" };
+
+	protected override async Task OnParametersSetAsync()
+	{
+		if (Id is not null)
+		{
+			var result = await Http.GetFromJsonAsync<VideoGame>($"api/VideoGame/GetOneVideoGame/{Id}");
+
+			if (result is not null)
+			{
+				videoGame = result;
+			}
+		}
+	}
+
+	async Task HandleSubmit()
+	{
+		if (Id is null)
+		{
+			await Http.PostAsJsonAsync("api/VideoGame/CreateNewVideoGame", videoGame);
+		}
+		else
+		{
+			await Http.PutAsJsonAsync($"api/VideoGame/UpdateVideoGame/{Id}", videoGame);
+		}
+
+		NavigationManager.NavigateTo("/videogames");
+	}
+
+	async Task DeleteVideoGame()
+	{
+		bool isConfirmed = await JsRuntime.Confirm("Are you sure?");
+
+		if (isConfirmed)
+		{
+			await Http.DeleteAsync($"api/VideoGame/DeleteVideoGame/{Id}");
+		}
+
+		NavigationManager.NavigateTo("/videogames");
+	}
+
+
+}

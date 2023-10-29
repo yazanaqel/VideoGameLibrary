@@ -1,0 +1,87 @@
+﻿@page "/videogames"
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+
+<h3>VideoGames</h3>
+
+
+<button class="btn btn-primary" @onclick="AddNewVideoGame">New Video Game</button>
+<hr />
+@if (videoGames is not null)
+{
+
+	<table class="table table-striped mt-4">
+		<thead>
+			<tr class="bg-primary text-white">
+				<th>
+					Title
+				</th>
+				<th>
+					Author
+				</th>
+				<th>
+					Release Year
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in videoGames)
+			{
+				<tr>
+					<td>
+						@item.Title
+					</td>
+					<td>
+						@item.Author
+					</td>
+					<td>
+						@item.ReleaseYear
+					</td>
+					<td>
+						<button class="btn btn-secondary" @onclick="(()=>EditVideoGame(item.Id))">Edit</button>
+					</td>
+
+				</tr>
+			}
+		</tbody>
+	</table>
+
+@* 	<QuickGrid Items="videoGames.AsQueryable()">
+
+		<PropertyColumn Property="x=>x.Title" />
+		<PropertyColumn Property="x=>x.Author" />
+		<PropertyColumn Property="x=>x.ReleaseYear" />
+		<TemplateColumn>
+
+			<button class="btn btn-secondary" @onclick="(()=>EditVideoGame(item.Id))">Edit</button>
+
+		</TemplateColumn>
+	</QuickGrid> *@
+}
+else
+{
+	<div class="loading-progress-text"></div>
+}
+@code {
+	List<VideoGame>? videoGames;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var result = await Http.GetFromJsonAsync<List<VideoGame>>("api/VideoGame/GetAllVideoGames");
+
+		if (result is not null)
+			videoGames = result;
+	}
+
+	void AddNewVideoGame()
+	{
+		NavigationManager.NavigateTo("/edit");
+	}
+
+	void EditVideoGame(int id)
+	{
+		NavigationManager.NavigateTo($"/edit/{id}");
+	}
+
+}
